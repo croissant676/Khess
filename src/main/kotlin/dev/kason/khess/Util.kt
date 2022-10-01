@@ -13,19 +13,20 @@ data class Color(val red: UByte, val green: UByte, val blue: UByte) {
     object Serializer : KSerializer<Color> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Color", PrimitiveKind.STRING)
         override fun serialize(encoder: Encoder, value: Color) = encoder.encodeString(value.toString())
-        override fun deserialize(decoder: Decoder): Color = convertWebToColor(decoder.decodeString())
+        override fun deserialize(decoder: Decoder): Color = decodeColor(decoder.decodeString())
     }
 }
 
 private const val GoldenRatioConjugate = 0.618033988749895
-private fun convertWebToColor(web: String): Color {
+
+fun decodeColor(web: String): Color {
     val red = web.substring(1, 3).toInt(16).toUByte()
     val green = web.substring(3, 5).toInt(16).toUByte()
     val blue = web.substring(5, 7).toInt(16).toUByte()
     return Color(red, green, blue)
 }
 
-private fun randomColor(): Color {
+fun randomColor(): Color {
     val hue = ((Random.nextDouble() + GoldenRatioConjugate) % 1.0).toFloat()
     val jColor = java.awt.Color.HSBtoRGB(hue, 0.3f, Random.nextDouble(0.8, 1.0).toFloat())
     return Color(

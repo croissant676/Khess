@@ -42,16 +42,6 @@ class Board(override val game: Game) : Iterable<Square>, Game.Entity {
         return positionMap[position]
     }
 
-    fun setPiece(position: Position, value: Piece?): Boolean {
-        require(position !in dimensions) { "Position $position is out of bounds" }
-        if (value == null) {
-            positionMap.remove(position)
-            return true
-        }
-        require(value.position == position) { "Piece $value is not at position $position" }
-        return positionMap.put(position, value) != null
-    }
-
     class Dimensions(val sideLength: Int) {
         private val shorter = sideLength / 2
         private val longer = sideLength - shorter

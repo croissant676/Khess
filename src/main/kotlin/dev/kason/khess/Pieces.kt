@@ -59,17 +59,7 @@ abstract class Piece(
         val player: Player.Data,
         val position: Position
     ) {
-        fun toPiece(game: Game): Piece {
-            val player = player.toPlayer(game)
-            return when (type) {
-                PieceType.Pawn -> Pawn(player, position.toMutable(), game)
-                PieceType.Knight -> Knight(player, position.toMutable(), game)
-                PieceType.Bishop -> Bishop(player, position.toMutable(), game)
-                PieceType.Rook -> Rook(player, position.toMutable(), game)
-                PieceType.Queen -> Queen(player, position.toMutable(), game)
-                PieceType.King -> King(player, position.toMutable(), game)
-            }
-        }
+        fun toPiece(game: Game): Piece? = game.board.getPiece(position)
     }
 
     fun toData() = Data(pieceType, player.toData(), position.copy())
@@ -227,10 +217,16 @@ class King(player: Player, position: Position, game: Game) : Piece(player, posit
 }
 @Serializable
 enum class PieceType(val value: Int) {
+    @SerialName("pawn")
     Pawn(1),
+    @SerialName("knight")
     Knight(3),
+    @SerialName("bishop")
     Bishop(3),
+    @SerialName("rook")
     Rook(5),
+    @SerialName("queen")
     Queen(9),
+    @SerialName("king")
     King(15);
 }
