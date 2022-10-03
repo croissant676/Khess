@@ -12,13 +12,14 @@ class Board(override val game: Game) : Iterable<Square>, Game.Entity {
     var dimensions: Dimensions = Dimensions(0)
         private set
 
-    fun updateSize(playerCount: Int): Boolean {
+    val boardDimensionUpdateCallbacks = mutableListOf<(Board) -> Unit>()
+
+    fun updateSize(playerCount: Int) {
         val expectedSideLength = (5 * sqrt(playerCount.toDouble())).roundToInt()
         if (dimensions.sideLength != expectedSideLength) {
             dimensions = Dimensions(expectedSideLength)
-            return true
+            boardDimensionUpdateCallbacks.forEach { it(this) }
         }
-        return false
     }
 
     operator fun get(position: Position): Square {
@@ -52,6 +53,7 @@ class Board(override val game: Game) : Iterable<Square>, Game.Entity {
         val rangeHorizontal = startX..endX
         val rangeVertical = startY..endY
         operator fun contains(position: Position) = position.x in rangeHorizontal && position.y in rangeVertical
+        fun random(): Position = Position((startX..endX).random(), (startY..endY).random())
     }
 
     override fun iterator(): Iterator<Square> = object : Iterator<Square> {

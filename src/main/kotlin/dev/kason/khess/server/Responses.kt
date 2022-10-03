@@ -10,6 +10,7 @@ class ErrorResponse(
 )
 @Serializable
 class PossibleMovesResponse(
+    val types: String = "possible_moves",
     val moves: MutableSet<Move>,
     val timestamp: Long = System.currentTimeMillis()
 ) {
@@ -24,3 +25,9 @@ class PossibleMovesResponse(
         val positions: Set<Position>
     )
 }
+@Serializable
+class LeaderboardResponse(
+    val type: String = "leaderboard",
+    val players: List<Player.Data>,
+    val timestamp: Long = System.currentTimeMillis()
+)

@@ -1,9 +1,5 @@
 package dev.kason.khess
 
-import io.ktor.http.*
-import io.ktor.server.testing.*
-import kotlin.test.Test
-
 class ApplicationTest {
 
     private fun test(playerCount: Int) = when {

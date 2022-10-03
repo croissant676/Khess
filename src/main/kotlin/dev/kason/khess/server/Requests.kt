@@ -19,4 +19,3 @@ data class MoveRequest(
     val piece: Piece.Data,
     val position: Position
 ) : Request()
-

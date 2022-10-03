@@ -38,6 +38,7 @@ class Game {
         players += player
         board.updateSize(players.size)
         logger.info("Player ${player.name} joined the game ${player.toData()}")
+
     }
 
     suspend fun acceptMoveRequest(request: MoveRequest, player: Player) {

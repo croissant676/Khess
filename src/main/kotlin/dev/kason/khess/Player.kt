@@ -22,26 +22,62 @@ class Player(
         const val DeathInterval = 5000L
     }
 
-    var kingPiece: Piece? = null
+    var kingPiece: King? = null
     val pieces: MutableSet<Piece> = mutableSetOf()
     var lastMoveTimestamp: Long = 0
     var lastDeathTimestamp: Long = 0
     var moveInterval: Int = 1000
     val frame: ViewFrame = ViewFrame(this)
     var pointCount: Int = 4
-    fun spawn() {
+    fun spawn(initialPiecesType: InitialPiecesType) {
         require(System.currentTimeMillis() - lastDeathTimestamp >= DeathInterval) {
             "Player $name is still in death state"
         }
-    }
-
-    // find a place on the board that is 3 squares away from any other player
-    fun calculateSuitableLocation(): Position {
-        val occupied = game.players.flatMap { it.pieces }.map { it.position }.toSet()
-        TODO()
+        var position = game.board.dimensions.random()
+        while (pieces.any { (it.position.x - position.x) < 3 && (it.position.y - position.y) < 3 }) {
+            position = game.board.dimensions.random()
+        }
+        kingPiece = King(this, position, game)
+        spawnPiece(kingPiece!!)
+        when (initialPiecesType) {
+            InitialPiecesType.FourPawns -> repeat(4) {
+                val pawn = Pawn(this, chooseLocationAsCloseAsPossible(), game)
+                spawnPiece(pawn)
+            }
+            InitialPiecesType.BishopAndPawn -> {
+                val bishop = Bishop(this, chooseLocationAsCloseAsPossible(), game)
+                spawnPiece(bishop)
+                val pawn = Pawn(this, chooseLocationAsCloseAsPossible(), game)
+                spawnPiece(pawn)
+            }
+            InitialPiecesType.KnightAndPawn -> {
+                val knight = Knight(this, chooseLocationAsCloseAsPossible(), game)
+                spawnPiece(knight)
+                val pawn = Pawn(this, chooseLocationAsCloseAsPossible(), game)
+                spawnPiece(pawn)
+            }
+        }
     }
 
     fun spawnPiece(piece: Piece) {
+        this.pieces += piece
+        game.board[piece.position] = piece
+    }
+
+    fun chooseLocationAsCloseAsPossible(): Position {
+        val kingPosition = kingPiece!!.position
+        var radius = 1
+        while (true) {
+            for (x in -radius..radius) {
+                for (y in -radius..radius) {
+                    val position = Position(kingPosition.x + x, kingPosition.y + y)
+                    if (game.board[position].isEmpty) {
+                        return position
+                    }
+                }
+            }
+            radius++
+        }
     }
 
     fun movePiece(piece: Piece, to: Position) {
@@ -103,16 +139,18 @@ class ViewFrame(val player: Player) {
 
     object Serializer : KSerializer<ViewFrame> {
         override fun serialize(encoder: Encoder, value: ViewFrame) = encoder.encodeStructure(descriptor) {
-            encodeIntElement(descriptor, 0, value.startX)
-            encodeIntElement(descriptor, 1, value.startY)
-            encodeIntElement(descriptor, 2, value.endX)
-            encodeIntElement(descriptor, 3, value.endY)
-            encodeIntElement(descriptor, 4, value.stage)
+            encodeStringElement(descriptor, 0, "view_frame")
+            encodeIntElement(descriptor, 1, value.startX)
+            encodeIntElement(descriptor, 2, value.startY)
+            encodeIntElement(descriptor, 3, value.endX)
+            encodeIntElement(descriptor, 4, value.endY)
+            encodeIntElement(descriptor, 5, value.stage)
             val pieceData = value.piecesInRange.map { it.toData() }
-            encodeSerializableElement(descriptor, 5, ListSerializer(Piece.Data.serializer()), pieceData)
+            encodeSerializableElement(descriptor, 6, ListSerializer(Piece.Data.serializer()), pieceData)
         }
 
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ViewFrame") {
+            element<String>("type")
             element<Int>("start_x")
             element<Int>("start_x")
             element<Int>("end_x")

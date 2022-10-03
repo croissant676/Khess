@@ -16,7 +16,7 @@ suspend fun main() {
         }
     }
     client.webSocket("ws://localhost:8080/") {
-        this.send(
+        send(
             buildJsonObject {
                 put("type", "join")
                 put("name", "test")

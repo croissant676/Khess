@@ -3,8 +3,6 @@
 package dev.kason.khess
 
 import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
 
 abstract class Piece(
     val player: Player,
@@ -46,8 +44,8 @@ abstract class Piece(
     fun capture(position: Position) {
         val piece = game.board.getPiece(position)
         checkNotNull(piece) { "No piece at $position to capture." }
-        piece.delete()
         onCapture(piece)
+        piece.delete()
         moveToInternal(position)
     }
 
