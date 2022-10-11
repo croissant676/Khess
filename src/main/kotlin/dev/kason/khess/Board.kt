@@ -23,7 +23,7 @@ class Board(override val game: Game) : Iterable<Square>, Game.Entity {
     }
 
     operator fun get(position: Position): Square {
-        require(position !in dimensions) { "Position $position is out of bounds" }
+        require(position in dimensions) { "Position $position is out of bounds" }
         val piece = positionMap[position] ?: return Square.Empty(position)
         return Square.Occupied(position, piece)
     }
@@ -54,6 +54,7 @@ class Board(override val game: Game) : Iterable<Square>, Game.Entity {
         val rangeVertical = startY..endY
         operator fun contains(position: Position) = position.x in rangeHorizontal && position.y in rangeVertical
         fun random(): Position = Position((startX..endX).random(), (startY..endY).random())
+
     }
 
     override fun iterator(): Iterator<Square> = object : Iterator<Square> {

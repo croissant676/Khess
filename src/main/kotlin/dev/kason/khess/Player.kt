@@ -2,6 +2,7 @@
 
 package dev.kason.khess
 
+import dev.kason.khess.server.*
 import io.ktor.server.websocket.*
 import io.ktor.util.*
 import kotlinx.serialization.*
@@ -29,6 +30,7 @@ class Player(
     var moveInterval: Int = 1000
     val frame: ViewFrame = ViewFrame(this)
     var pointCount: Int = 4
+    var freePointCount: Int = 4
     fun spawn(initialPiecesType: InitialPiecesType) {
         require(System.currentTimeMillis() - lastDeathTimestamp >= DeathInterval) {
             "Player $name is still in death state"
@@ -57,6 +59,12 @@ class Player(
                 spawnPiece(pawn)
             }
         }
+        // frame is 4 x 4, with king in the center
+        frame.startX = kingPiece!!.position.x - 1
+        frame.startY = kingPiece!!.position.y - 1
+        frame.endX = kingPiece!!.position.x + 2
+        frame.endY = kingPiece!!.position.y + 2
+        frame.stage = 0
     }
 
     fun spawnPiece(piece: Piece) {
@@ -68,13 +76,13 @@ class Player(
         val kingPosition = kingPiece!!.position
         var radius = 1
         while (true) {
-            for (x in -radius..radius) {
-                for (y in -radius..radius) {
-                    val position = Position(kingPosition.x + x, kingPosition.y + y)
-                    if (game.board[position].isEmpty) {
-                        return position
-                    }
+            val possiblePositions = (kingPosition.x - radius..kingPosition.x + radius).flatMap { x ->
+                (kingPosition.y - radius..kingPosition.y + radius).map { y ->
+                    Position(x, y)
                 }
+            }.filter { it in game.board.dimensions && game.board[it].isEmpty }
+            if (possiblePositions.isNotEmpty()) {
+                return possiblePositions.random()
             }
             radius++
         }
@@ -85,7 +93,11 @@ class Player(
         require(to in piece.getMoves()) { "You can't move to $to" } // also checks whether position is in the board & frame.
         require(piece.position in frame) { "Piece is out of frame" }
         require(piece.player == this) { "You can only move your own pieces." }
-        piece.move(to)
+        if (game.board[to].isOccupied) {
+            piece.capture(to)
+        } else {
+            piece.move(to)
+        }
     }
 
     fun kill() {
@@ -94,6 +106,10 @@ class Player(
         kingPiece = null
         pointCount = 4
         moveInterval = 1000
+    }
+
+    fun addPoints(piece: Piece) {
+        pointCount += piece.pieceType.value
     }
 
     override fun equals(other: Any?): Boolean = other is Player && other.sessionId == sessionId
@@ -109,11 +125,24 @@ class Player(
     ) {
         fun toPlayer(game: Game) = game.players.first { it.sessionId == id }
     }
+    @Serializable
+    data class VariableData(
+        val name: String,
+        val color: Color,
+        val id: String,
+        @SerialName("point_count")
+        val pointCount: Int,
+        @SerialName("free_point_count")
+        val freePointCount: Int
+    ) {
+        fun toPlayer(game: Game) = game.players.first { it.sessionId == id }
+    }
 
     fun toData(): Data = Data(name, color, sessionId, pointCount)
     suspend fun updateViewFrame() {
         session.sendSerialized(frame)
     }
+    fun getMovesData(): PossibleMovesResponse = PossibleMovesResponse(this)
 }
 @Serializable(with = ViewFrame.Serializer::class)
 class ViewFrame(val player: Player) {
@@ -152,9 +181,9 @@ class ViewFrame(val player: Player) {
         override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ViewFrame") {
             element<String>("type")
             element<Int>("start_x")
-            element<Int>("start_x")
+            element<Int>("start_y")
             element<Int>("end_x")
-            element<Int>("end_x")
+            element<Int>("end_y")
             element<Int>("stage")
             element<List<Piece.Data>>("pieces")
         }

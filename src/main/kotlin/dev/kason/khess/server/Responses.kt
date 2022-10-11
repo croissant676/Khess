@@ -19,12 +19,14 @@ class PossibleMovesResponse(
             this.moves += Move(piece.toData(), piece.getMoves())
         }
     }
+    constructor(player: Player): this(player.pieces)
     @Serializable
     class Move(
         val piece: Piece.Data,
         val positions: Set<Position>
     )
 }
+
 @Serializable
 class LeaderboardResponse(
     val type: String = "leaderboard",

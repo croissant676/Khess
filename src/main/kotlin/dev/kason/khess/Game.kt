@@ -14,7 +14,7 @@ class Game {
         logger.debug("Accepting join request from ${joinRequest.name}")
         val player = createPlayer(joinRequest, socket)
         this.players += player
-        onJoin(player)
+        onJoin(player, joinRequest.initialPiecesType)
         return player
     }
 
@@ -34,11 +34,11 @@ class Game {
         )
     }
 
-    private fun onJoin(player: Player) {
+    private fun onJoin(player: Player, initialPiecesType: InitialPiecesType) {
         players += player
         board.updateSize(players.size)
+        player.spawn(initialPiecesType)
         logger.info("Player ${player.name} joined the game ${player.toData()}")
-
     }
 
     suspend fun acceptMoveRequest(request: MoveRequest, player: Player) {
@@ -52,7 +52,7 @@ class Game {
         updateViewFrameForOthers(startPosition, position, player)
     }
 
-    suspend fun updateViewFrameForOthers(startPosition: Position, endPosition: Position, player: Player) {
+    private suspend fun updateViewFrameForOthers(startPosition: Position, endPosition: Position, player: Player) {
         players.filter { it != player && (startPosition in player.frame || endPosition in player.frame) }
             .forEach { it.updateViewFrame() }
     }

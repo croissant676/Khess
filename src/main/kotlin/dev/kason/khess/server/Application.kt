@@ -17,10 +17,9 @@ import kotlin.properties.*
 import kotlin.reflect.*
 
 val logger = LoggerFactory.getLogger("dev.kason.khess")!!
-
 fun main(): Unit = embeddedServer(Netty, port = 8080) {
     install(WebSockets) {
-        contentConverter = KotlinxWebsocketSerializationConverter(Json)
+        contentConverter = KotlinxWebsocketSerializationConverter(Json { prettyPrint = true })
     }
     install(ContentNegotiation) {
         json()
@@ -42,6 +41,8 @@ fun main(): Unit = embeddedServer(Netty, port = 8080) {
                         is JoinRequest -> {
                             player = game.acceptJoinRequest(request, this@webSocket)
                             sendSerialized(player.toData())
+                            sendSerialized(player.frame)
+                            sendSerialized(player.getMovesData())
                         }
                         is MoveRequest -> {
                             game.acceptMoveRequest(request, player)

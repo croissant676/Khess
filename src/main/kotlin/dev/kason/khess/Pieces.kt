@@ -41,12 +41,13 @@ abstract class Piece(
     }
 
     open fun onCapture(capturedPiece: Piece) {}
-    fun capture(position: Position) {
+    fun capture(position: Position): Piece {
         val piece = game.board.getPiece(position)
         checkNotNull(piece) { "No piece at $position to capture." }
         onCapture(piece)
         piece.delete()
         moveToInternal(position)
+        return piece
     }
 
     abstract fun getMoves(): Set<Position>
@@ -91,7 +92,7 @@ class Pawn(player: Player, position: Position, game: Game) : Piece(player, posit
             Position(this.position.x, this.position.y - 1),
             Position(this.position.x + 1, this.position.y),
             Position(this.position.x - 1, this.position.y),
-        ).filter { game.board[it].isEmpty }
+        ).filter { it in game.board.dimensions && game.board[it].isEmpty }
         position += when (currentlyFacingDirection) {
             1 -> setOf(
                 Position(this.position.x + 1, this.position.y + 1),

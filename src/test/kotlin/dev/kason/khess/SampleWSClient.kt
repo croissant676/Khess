@@ -1,6 +1,5 @@
 package dev.kason.khess
 
-import dev.kason.khess.server.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
@@ -22,7 +21,12 @@ suspend fun main() {
                 put("name", "test")
             }.toString()
         )
-        val message = incoming.receive()
-        println((message as? Frame.Text)?.readText() ?: "null")
+        repeat(3) {
+            println((incoming.receive() as Frame.Text).readText())
+        }
+        while (true) {
+            send(readln())
+            println((incoming.receive() as Frame.Text).readText())
+        }
     }
 }
