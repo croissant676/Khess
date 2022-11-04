@@ -1,0 +1,60 @@
+first request : join
+# PlayerJoinRequest
+{
+    "name": string,
+    "color": string?,
+    "type": starting_type?,
+}
+
+response : join
+# PlayerJoinResponse
+{
+    "player": player
+    "view_frame": view_frame,
+    "game_state": global_game_state,
+}
+
+request : move
+# PlayerMoveRequest
+{
+    "move": move,
+}
+
+response : move
+# PlayerMoveResponse
+{
+    "view_frame": view_frame,
+}
+
+request : leave
+response : leave
+
+request : upgrade
+# PlayerUpgradeRequest
+{
+    "upgrade": upgrade,
+}
+
+response : upgrade
+# PlayerUpgradeResponse
+{
+    "stats": player,
+    "view_frame": view_frame,
+}
+
+request : update
+response : update
+# PlayerUpdateResponse
+{
+    "player": player
+    "view_frame": view_frame,
+    "game_state": global_game_state,
+}
+
+### sse
+
+event : another_player_move
+{
+    "player": player,
+    "move": move,
+}
