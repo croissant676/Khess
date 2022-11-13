@@ -1,41 +1,33 @@
-let low_x = 0;
-let low_y = 0;
+let enter_button = document.getElementById("enter");
+let enter_div = document.getElementById("enter-div");
+let initialized = false;
+let ws = null;
 
-let high_x = 8;
-let high_y = 8;
-
-let current_state = 0;
-// 0 -> login
-// 1 -> game
-// 2 -> game over
-function change_state(state) {
+function send_request() {
+    let username = document.getElementById("username-input").value;
+    console.assert(ws != null);
+    ws.send(JSON.stringify({
+        type: "create",
+        username: username
+    }));
 }
 
-let prev_state = current_state;
 
-function check_state() {
-    if (current_state !== prev_state) {
-        // change state
-        
+enter_button.onclick = function () {
+    try {
+        ws = new WebSocket('ws://localhost:8080/game');
+    } catch (e) {
+        console.log(e);
+        alert("Failed to connect to server. :(");
+        return;
     }
-    
-    if (current_state === 0) {
-        display_login();
-    } else if (current_state === 1) {
-        
-    }
+    ws.onopen = function () {
+        send_request();
+        initialize_board();
+    };
 }
 
-function display_login() {
-    let login = document.getElementById("login");
-    // create a login page
-    let login_form = document.createElement("form");
-    login_form.setAttribute("id", "login_form");
-    login_form.setAttribute("method", "post");
-    login_form.setAttribute("action", "javascript:login();");
-    login.appendChild(login_form);
-    
-}
+// api stuff
 
 class position {
     constructor(x, y) {
@@ -44,66 +36,73 @@ class position {
     }
 }
 
-class piece {
-    constructor(player, position, type) {
-        this.player = player;
+class tile {
+    constructor(position) {
         this.position = position;
-        this.type = type;
+        this.x = position.x;
+        this.y = position.y;
+        this.piece = null;
+    }
+
+    is_even() {
+        return (this.x + this.y) % 2 === 0;
     }
 }
 
-class board_view {
-    constructor() {
-        this.board = new Array(high_x - low_x + 1);
-        for (let i = 0; i < high_x - low_x + 1; i++) {
-            this.board[i] = new Array(high_y - low_y + 1);
-        }
-        this.board_div = document.getElementById("board");
+class piece {
+    constructor(owner) {
+
     }
-    
-    display_board() {
-        for (let i = 0; i < high_x - low_x + 1; i++) {
-            let c_row = document.createElement("div");
-            c_row.classList.add("row");
-            c_row.id = "row" + i;
-            // at the beginning of the row, add the row number
-            let c_row_number = document.createElement("p");
-            c_row_number.classList.add("row_header");
-            c_row_number.innerHTML = "" + i;
-            c_row.appendChild(c_row_number);
-            
-            for (let j = 0; j < high_y - low_y + 1; j++) {
-                let c_div = document.createElement("div");
-                c_div.classList.add("cell");
-                if ((i + j) % 2 === 0) {
-                    c_div.classList.add("white");
-                } else {
-                    c_div.classList.add("black");
-                }
-                c_div.id = "cell_" + i + "_" + j;
-                c_row.appendChild(c_div);
-            }
-            this.board_div.appendChild(c_row);
+}
+
+class player {
+    constructor(name, color, id) {
+        this.name = name;
+        this.color = color;
+        this.id = id;
+    }
+}
+
+let game_div = document.getElementById("game-div");
+game_div.style.display = "none";
+let board = document.getElementById("board");
+let player_stats = document.getElementById("player-stats");
+let lb = document.getElementById("lb");
+
+let board_size;
+let minor_side;
+let major_side;
+let active_player_count;
+
+let top_corner, bottom_corner;
+const tile_len = () => bottom_corner.x - top_corner.x + 1;
+const tile_size = () => {
+    return {x: board.clientWidth / tile_len(), y: board.clientHeight / tile_len()}
+};
+
+function initialize_board() {
+    enter_div.style.display = "none";
+    game_div.style.display = "block";
+    ws.onmessage = function (event) {
+        console.log(event);
+        if (typeof event.data !== "string") {
+            return;
+        }
+        let data = JSON.parse(event.data);
+        switch (data.type) {
+            case "game_info":
+                board_size = data.board_size;
+                minor_side = data.minor_side;
+                major_side = data.major_side;
+                active_player_count = data.active_player_count;
+                break;
+            case "viewframe":
+
+                break;
         }
     }
 }
 
-class server_connection {
-    // websockets
-    constructor() {
-        this.ws = new WebSocket("ws://localhost:8080");
-        this.ws.onopen = function() {
-            console.log("Connected to server");
-        }
-        this.ws.onmessage = function(event) {
-            console.log(event.data);
-        }
-        this.ws.onclose = function() {
-            console.log("Disconnected from server");
-        }
-    }
-}
+function display_board() {
 
-window.onload = function() {
-    check_state();
 }
