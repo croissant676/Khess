@@ -3,13 +3,27 @@ let enter_div = document.getElementById("enter-div");
 let initialized = false;
 let ws = null;
 
+let current_player_name = null;
+
 function send_request() {
-    let username = document.getElementById("username-input").value;
-    console.assert(ws != null);
-    ws.send(JSON.stringify({
+    let username = document.getElementById("username").value;
+    send(JSON.stringify({
         type: "create",
         username: username
     }));
+    current_player_name = username;
+}
+
+function send(data) {
+    if (ws === null) {
+        console.error("WebSocket is not initialized.");
+    }
+    if (ws.readyState === WebSocket.OPEN) {
+        console.debug("Sending data: " + data);
+        ws.send(data);
+    } else {
+        console.error("WebSocket is not open.");
+    }
 }
 
 
@@ -50,8 +64,22 @@ class tile {
 }
 
 class piece {
-    constructor(owner) {
+    constructor(player) {
+        this.player = player;
+        this.type = null;
+        this.position = null;
+    }
 
+    move(tile) {
+        this.position = tile;
+        tile.piece = this;
+    }
+}
+
+class pawn extends piece {
+    constructor(player) {
+        super(player);
+        this.direction = null;
     }
 }
 
@@ -75,9 +103,9 @@ let major_side;
 let active_player_count;
 
 let top_corner, bottom_corner;
-const tile_len = () => bottom_corner.x - top_corner.x + 1;
+let side_length;
 const tile_size = () => {
-    return {x: board.clientWidth / tile_len(), y: board.clientHeight / tile_len()}
+    return {x: board.clientWidth / side_length, y: board.clientHeight / side_length}
 };
 
 function initialize_board() {
@@ -97,12 +125,36 @@ function initialize_board() {
                 active_player_count = data.active_player_count;
                 break;
             case "viewframe":
+                top_corner = new position(data.top_corner.x, data.top_corner.y);
+                bottom_corner = new position(data.bottom_corner.x, data.bottom_corner.y);
+                side_length = data.side_len;
 
                 break;
+        }
+
+    }
+}
+
+function update_board_state() {
+
+}
+
+function display_board() {
+    while (board.firstChild) {
+        board.removeChild(board.firstChild);
+    }
+    for (let i = 0; i < board_size; i++) {
+        let row = document.createElement("div");
+        row.classList.add("row");
+        board.appendChild(row);
+        for (let j = 0; j < board_size; j++) {
+            let tile = document.createElement("div");
+            tile.classList.add("tile");
+            row.appendChild(tile);
         }
     }
 }
 
-function display_board() {
+function update_everything() {
 
 }
