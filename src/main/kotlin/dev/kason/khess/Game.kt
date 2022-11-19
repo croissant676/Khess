@@ -54,7 +54,7 @@ object Game {
                 val playerViewFrame = it.viewFrame
                 playerViewFrame != null && (moveRequest.to in playerViewFrame || piece.position in playerViewFrame)
             }.forEach {
-                it.websocket // send their new view frame
+                it.sendViewFrame()
             }
             pieces[moveRequest.to]?.delete()
             return true
